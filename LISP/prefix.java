@@ -1,15 +1,51 @@
 import java.util.*;
 public class prefix{
-    public static void main(String[] args) {
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter a prefix expression:");
-        String input = sc.nextLine();
-        String[] tokens = input.split(" ");
+    public static int evaluateExpr(String[] tokens, int start, String[][] vars, int varCount) {
+        if (!tokens[start].equals("(")) {
+            String val = getVarValue(tokens[start], vars, varCount);
+            return Integer.parseInt(val);
+        }
+        start++;
+        String operator = tokens[start];
+        start++;
+        List<Integer> operands = new ArrayList<>();
+        while (!tokens[start].equals(")")) {
+            if (tokens[start].equals("(")) {
+                operands.add(evaluateExpr(tokens, start, vars, varCount));
+                int parenCount = 1;
+                start++;
+                while (parenCount > 0) {
+                    if (tokens[start].equals("(")) parenCount++;
+                    if (tokens[start].equals(")")) parenCount--;
+                    start++;
+                }
+            } else {
+                String val = getVarValue(tokens[start], vars, varCount);
+                operands.add(Integer.parseInt(val));
+                start++;
+            }
+        }
+        int result = operands.get(0);
+        for (int i = 1; i < operands.size(); i++) {
+            result = applyOperator(operator, result, operands.get(i));
+        }
+        return result;
+    }
+    
+    private static String getVarValue(String name, String[][] vars, int varCount) {
+        for (int i = 0; i < varCount; i++) {
+            if (vars[i][0].equals(name)) {
+                return vars[i][1];
+            }
+        }
+        return name;
+    }
+    
+    public static void solve_prefix(String[] tokens) {
         Stack<Integer> stack = new Stack<>();
-
         for (int i = tokens.length - 1; i >= 0; i--) {
             String token = tokens[i];
-            if (isOperator(token)) {
+            if (token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/")) {
                 int operand1 = stack.pop();
                 int operand2 = stack.pop();
                 int result = applyOperator(token, operand1, operand2);
@@ -18,13 +54,7 @@ public class prefix{
                 stack.push(Integer.parseInt(token));
             }
         }
-
         System.out.println("The result is: " + stack.pop());
-        sc.close();
-    }
-
-    private static boolean isOperator(String token) {
-        return token.equals("+") || token.equals("-") || token.equals("*") || token.equals("/");
     }
 
     private static int applyOperator(String operator, int operand1, int operand2) {
@@ -40,6 +70,7 @@ public class prefix{
             default:
                 System.out.println("Invalid operator");
                 System.exit(1);
+                return 0;
         }
     }
 }
